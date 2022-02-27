@@ -7,8 +7,7 @@ from numpy import nan
 from scipy.spatial import distance
 from sklearn.impute import SimpleImputer
 from sklearn.impute import KNNImputer
-import matplotlib.pyplot as plt
-from sklearn import metrics
+
 
 def resample_with_replacement(x_idx, X, y):
 
@@ -46,44 +45,49 @@ def extract_stat_dif_of_hemis(strm_median_P, strm_median_H):
     
 def histogram_feature(x_profile_all):
     
-    x_profile_metric = x_profile_all.reshape(x_profile_all.shape[0],100,5)
+    x_profile_metric = x_profile_all.reshape(x_profile_all.shape[0],100,10)
     ad_p_stats = extract_stat_per_hemis(x_profile_metric[:,:,0])
     adc_p_stats = extract_stat_per_hemis(x_profile_metric[:,:,1])
     fa_p_stats = extract_stat_per_hemis(x_profile_metric[:,:,2])
     fd_p_stats = extract_stat_per_hemis(x_profile_metric[:,:,3])
     rd_p_stats = extract_stat_per_hemis(x_profile_metric[:,:,4])
+    ad_h_stats = extract_stat_per_hemis(x_profile_metric[:,:,5])
+    adc_h_stats = extract_stat_per_hemis(x_profile_metric[:,:,6])
+    fa_h_stats = extract_stat_per_hemis(x_profile_metric[:,:,7])
+    fd_h_stats = extract_stat_per_hemis(x_profile_metric[:,:,8])
+    rd_h_stats = extract_stat_per_hemis(x_profile_metric[:,:,9])
     
     return np.hstack((ad_p_stats, 
                       adc_p_stats, 
                       fa_p_stats, 
                       fd_p_stats, 
-                      rd_p_stats))
+                      rd_p_stats,
+                      ad_h_stats, 
+                      adc_h_stats, 
+                      fa_h_stats, 
+                      fd_h_stats, 
+                      rd_h_stats))
 
 def median_imputation(profile_P_tra, profile_P_tes):
     
     imp_median = SimpleImputer(missing_values=np.nan, strategy='median')
     profile_P_tra_imp = imp_median.fit_transform(profile_P_tra)
     profile_P_tes_imp = imp_median.transform(profile_P_tes)
+    # Extract features
     X_train_hist = histogram_feature(profile_P_tra_imp)
     X_test_hist = histogram_feature(profile_P_tes_imp)    
     return X_train_hist, X_test_hist
 
-def KNN_imputation(K, profile_P_tr):
+def KNN_imputation(K, profile_P_tra, profile_P_tes):
     
     imp_knn = KNNImputer(n_neighbors=K)
     profile_P_tra_imp = imp_knn.fit_transform(profile_P_tra)
     profile_P_tes_imp = imp_knn.transform(profile_P_tes)
+    # Extract features
     X_train_hist = histogram_feature(profile_P_tra_imp)
     X_test_hist = histogram_feature(profile_P_tes_imp)
     return X_train_hist, X_test_hist
 
-def median_profile(data_raw_P):
-    # data_raw_P shape: number_of_streamlines*number_of_points_along_tractogram(5000*100)
-    return np.median(data_raw_P, axis=0).T
-    
-def weighted_mean_profile(data_raw_P):
-    
-    return np.mean(data_raw_P, axis=0).T
 
 def pca_correction(pca, profile):
     # Try to correct pca values
@@ -109,9 +113,8 @@ def mahalanobis(x=None, mu=None, covmat=None):
     return mahal
 
 def cal_mahal_profile(data):
-    
+    # data shape is 5000*100
     dist = np.zeros(shape=(data.shape[0],1))
-    
     for obs in range(data.shape[0]):
         
         dist[obs] = mahalanobis(x=data[obs,:], 
@@ -119,7 +122,17 @@ def cal_mahal_profile(data):
                                 covmat=np.cov(data, rowvar=0))
         eplsilon = 0.00000001  # make sure we won't face zero devision
         mahal_profile = ((1/(dist+eplsilon))*data).sum(axis=0) 
+        
     return mahal_profile
+
+def mahal_profile(data, subjN):
+    # data shape is 5000*100*116
+    
+    mahal = np.zeros(shape=(data.shape[2],data.shape[1]))
+    for i in range(data.shape[2]):
+        mahal[i,:] = cal_mahal_profile(data[:,:,i])
+        
+    return mahal
 
 def Clustering_streamlines(data):
     # this function will weighing up the streamlines by computing the mahalanobis distance of each
@@ -268,8 +281,8 @@ def sub_divide_hemispheres(data,PathSide, subjN):
             
     return sub_data_left, sub_data_right
 
-def loadrawdata_R_new(strr, subN):
-    paths = sorted(glob.glob('/Users/boshra/Desktop/Boshra/all_patients/'+strr+'/*.csv'), 
+def loadrawdata_R_new(path, strr, subN):
+    paths = sorted(glob.glob(path + strr + '/*.csv'), 
                    key=lambda x:float(re.findall("(\d+)",x)[1]))   
     
     for i in range(subN):
