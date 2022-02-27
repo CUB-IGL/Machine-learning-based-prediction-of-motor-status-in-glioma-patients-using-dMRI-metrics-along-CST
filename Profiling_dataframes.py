@@ -50,17 +50,17 @@ def profiling(pathologic_side, subjN, path, method='Median'):
     else:
         raise AttributeError('Please select Median or Mahalanobis')
                 
-def dataframe_dMRI_profile(  strm_mahal_P, 
-                strm_mahal_H,
-                strm_mahal_P_fd,
-                strm_mahal_H_fd,
-                strm_mahal_P_adc,
-                strm_mahal_H_adc,
-                strm_mahal_P_rd,
-                strm_mahal_H_rd,
-                strm_mahal_P_ad,
-                strm_mahal_H_ad,
-                data):
+def dataframe_dMRI_profile( strm_P,
+                            strm_H,
+                            strm_P_fd,
+                            strm_H_fd,
+                            strm_P_adc,
+                            strm_H_adc,
+                            strm_P_rd,
+                            strm_H_rd,
+                            strm_P_ad,
+                            strm_H_ad,
+                            data):
 
     new_data_sep = pd.DataFrame(columns=['Sub_ID', 'pathologic_side','pathology_location','age', 
                                          'gender','MT_P','MT_H','RMT_P','RMT_H','Pathology','motor_status',
@@ -68,17 +68,17 @@ def dataframe_dMRI_profile(  strm_mahal_P,
     new_data_sep.astype({'loc': 'int32'})
     for i in range(strm_median_P.shape[0]):
         for j in range(100):
-            new_data_sep = new_data_sep.append(data.iloc[i])
-        new_data_sep.iloc[i*100:(i+1)*100,11] = strm_median_P[i,:]
-        new_data_sep.iloc[i*100:(i+1)*100,12] = strm_median_H[i,:]
-        new_data_sep.iloc[i*100:(i+1)*100,13] = strm_median_P_adc[i,:]
-        new_data_sep.iloc[i*100:(i+1)*100,14] = strm_median_H_adc[i,:]
-        new_data_sep.iloc[i*100:(i+1)*100,15] = strm_median_P_ad[i,:]
-        new_data_sep.iloc[i*100:(i+1)*100,16] = strm_median_H_ad[i,:] 
-        new_data_sep.iloc[i*100:(i+1)*100,17] = strm_median_P_rd[i,:]
-        new_data_sep.iloc[i*100:(i+1)*100,18] = strm_median_H_rd[i,:] 
-        new_data_sep.iloc[i*100:(i+1)*100,19] = strm_mean_P_fd[i,:]
-        new_data_sep.iloc[i*100:(i+1)*100,20] = strm_mean_H_fd[i,:] 
+            new_data_sep = new_data_sep.append(data.iloc[j])
+        new_data_sep.iloc[i*100:(i+1)*100,11] = strm_P[i,:]
+        new_data_sep.iloc[i*100:(i+1)*100,12] = strm_H[i,:]
+        new_data_sep.iloc[i*100:(i+1)*100,13] = strm_P_adc[i,:]
+        new_data_sep.iloc[i*100:(i+1)*100,14] = strm_H_adc[i,:]
+        new_data_sep.iloc[i*100:(i+1)*100,15] = strm_P_ad[i,:]
+        new_data_sep.iloc[i*100:(i+1)*100,16] = strm_H_ad[i,:]
+        new_data_sep.iloc[i*100:(i+1)*100,17] = strm_P_rd[i,:]
+        new_data_sep.iloc[i*100:(i+1)*100,18] = strm_H_rd[i,:]
+        new_data_sep.iloc[i*100:(i+1)*100,19] = strm_P_fd[i,:]
+        new_data_sep.iloc[i*100:(i+1)*100,20] = strm_H_fd[i,:]
         new_data_sep.iloc[i*100:(i+1)*100,21] = np.int64(np.arange(0,100))
     new_data_sep.reset_index()
     #new_data_sep.to_csv('/Users/boshra/Desktop/my_table_patients.csv') 
