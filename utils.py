@@ -10,9 +10,9 @@ from sklearn.impute import KNNImputer
 
 
 def resample_with_replacement(x_idx, X, y):
-
+    np.random.seed(0)
     # Get array of indices for resampled points
-    idx_samples = np.random.choice(x_idx, size=len(x_idx), replace=True)
+    idx_samples = np.random.choice(x_idx, size=x_idx, replace=True)
     # Sample from x and y according to sample_idx
     X_sampled = X[idx_samples, :]
     y_sampled = y[idx_samples]
